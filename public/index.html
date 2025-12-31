@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FastCut AI | Fast Cinema Script Generator</title>
+    <style>
+        :root {
+            --neon-orange: #ff4d00;
+            --dark-bg: #0a0a0a;
+            --card-bg: #1a1a1a;
+            --text: #ffffff;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background-color: var(--dark-bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .app-container {
+            max-width: 900px;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid #333;
+        }
+        h1 {
+            color: var(--neon-orange);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 5px;
+            font-size: 2.5em;
+        }
+        p.subtitle {
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #ccc;
+        }
+        input[type="text"], select {
+            width: 100%;
+            padding: 15px;
+            background: #252525;
+            border: 1px solid #444;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: var(--neon-orange);
+        }
+        .btn-generate {
+            background-color: var(--neon-orange);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            font-size: 18px;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .btn-generate:hover:not(:disabled) {
+            background-color: #e64500;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 77, 0, 0.4);
+        }
+        .btn-generate:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+            transform: none;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 30px;
+        }
+        .loading.active {
+            display: block;
+        }
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid var(--neon-orange);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .loading-text {
+            color: var(--neon-orange);
+            font-size: 1.1em;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        .output-area {
+            margin-top: 40px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
+            display: none;
+        }
+        .output-area.visible {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .output-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .output-header h3 {
+            color: var(--neon-orange);
+        }
+        .btn-copy {
+            background: #333;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .btn-copy:hover {
+            background: #444;
+        }
+        .script-meta {
+            background: #252525;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 0.9em;
+        }
+        .script-meta strong {
+            color: var(--neon-orange);
+        }
+        .script-output {
+            background: #252525;
+            padding: 25px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            line-height: 1.8;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            border: 1px solid #333;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+        .error {
+            background: #ff000020;
+            border: 1px solid #ff4444;
+            padding: 20px;
+            border-radius: 8px;
+            color: #ff6666;
+        }
+        .error strong {
+            color: #ff4444;
+        }
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <h1>⚡ FastCut AI</h1>
+        <p class="subtitle">Genereer 30-sec Fast Cinema scripts in één klik.</p>
+        
+        <div class="input-group">
+            <label>🎬 Wat is je onderwerp?</label>
+            <input 
+                type="text" 
+                id="topic" 
+                placeholder="Bijv. Een illegale straatrace in Tokyo met neon lights..."
+            >
+        </div>
+        
+        <div class="input-group">
+            <label>🎨 Visuele Stijl</label>
+            <select id="style">
+                <option value="teal-orange">Moody Teal & Orange</option>
+                <option value="gritty-bw">Gritty Black & White</option>
+                <option value="neon-cyber">Cyberpunk Neon</option>
+                <option value="natural-warm">Natural Warmth</option>
+            </select>
+        </div>
+        
+        <button class="btn-generate" id="generateBtn" onclick="generateScript()">
+            🚀 Genereer Script
+        </button>
+        
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p class="loading-text">Script wordt gegenereerd met AI...</p>
+        </div>
+        
+        <div id="output" class="output-area">
+            <div class="output-header">
+                <h3>📝 Gegenereerd Script</h3>
+                <button class="btn-copy" onclick="copyScript()">📋 Kopieer</button>
+            </div>
+            <div id="scriptMeta" class="script-meta"></div>
+            <div id="scriptContent" class="script-output"></div>
+        </div>
+    </div>
+
+    <footer>
+        Powered by Google Gemini AI • Made with ❤️ for Fast Cinema creators
+    </footer>
+
+    <script>
+        // Gebruik relatieve URL - werkt op Railway, Replit, en localhost
+        const API_URL = '/api/generate';
+
+        async function generateScript() {
+            const topic = document.getElementById('topic').value.trim();
+            const style = document.getElementById('style').value;
+            const output = document.getElementById('output');
+            const loading = document.getElementById('loading');
+            const generateBtn = document.getElementById('generateBtn');
+            const scriptContent = document.getElementById('scriptContent');
+            const scriptMeta = document.getElementById('scriptMeta');
+            
+            // Validatie
+            if (!topic) {
+                alert("⚠️ Vul eerst een onderwerp in!");
+                document.getElementById('topic').focus();
+                return;
+            }
+            
+            // UI: Start loading state
+            generateBtn.disabled = true;
+            generateBtn.textContent = '⏳ Bezig met genereren...';
+            loading.classList.add('active');
+            output.classList.remove('visible');
+            
+            try {
+                console.log('📤 Versturen naar API:', { topic, style });
+                
+                // Call de backend API
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ topic, style })
+                });
+                
+                const data = await response.json();
+                console.log('📥 Ontvangen van API:', data);
+                
+                if (data.success) {
+                    // Toon metadata
+                    scriptMeta.innerHTML = `
+                        <strong>📌 Onderwerp:</strong> ${data.topic}<br>
+                        <strong>🎨 Stijl:</strong> ${getStyleName(data.style)}
+                    `;
+                    
+                    // Toon het gegenereerde script
+                    scriptContent.textContent = data.script;
+                    output.classList.add('visible');
+                    
+                    // Scroll naar resultaat
+                    setTimeout(() => {
+                        output.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 100);
+                    
+                } else {
+                    // Toon error
+                    scriptMeta.innerHTML = '';
+                    scriptContent.innerHTML = `
+                        <div class="error">
+                            <strong>❌ Er ging iets mis</strong><br><br>
+                            ${data.error || 'Onbekende fout'}<br>
+                            ${data.details ? `<small>${data.details}</small>` : ''}
+                        </div>
+                    `;
+                    output.classList.add('visible');
+                }
+                
+            } catch (error) {
+                console.error('💥 Fetch error:', error);
+                scriptMeta.innerHTML = '';
+                scriptContent.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Verbindingsfout</strong><br><br>
+                        Kan geen verbinding maken met de server.<br>
+                        Zorg ervoor dat de backend draait.<br><br>
+                        <small>Error: ${error.message}</small>
+                    </div>
+                `;
+                output.classList.add('visible');
+            } finally {
+                // UI: Stop loading state
+                generateBtn.disabled = false;
+                generateBtn.textContent = '🚀 Genereer Script';
+                loading.classList.remove('active');
+            }
+        }
+        
+        function getStyleName(styleCode) {
+            const styles = {
+                'teal-orange': 'Moody Teal & Orange',
+                'gritty-bw': 'Gritty Black & White',
+                'neon-cyber': 'Cyberpunk Neon',
+                'natural-warm': 'Natural Warmth'
+            };
+            return styles[styleCode] || styleCode;
+        }
+        
+        function copyScript() {
+            const scriptText = document.getElementById('scriptContent').textContent;
+            navigator.clipboard.writeText(scriptText).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Gekopieerd!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                alert('Kon niet kopiëren: ' + err);
+            });
+        }
+        
+        // Enter toets support
+        document.getElementById('topic').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateScript();
+            }
+        });
+    </script>
+</body>
+</html>
