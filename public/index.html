@@ -236,7 +236,7 @@
         <div id="output" class="output-area">
             <div class="output-header">
                 <h3>📝 Gegenereerd Script</h3>
-                <button class="btn-copy" onclick="copyScript()">📋 Kopieer</button>
+                <button class="btn-copy" onclick="copyScript(e)">📋 Kopieer</button>
             </div>
             <div id="scriptMeta" class="script-meta"></div>
             <div id="scriptContent" class="script-output"></div>
@@ -347,18 +347,20 @@
             return styles[styleCode] || styleCode;
         }
         
-        function copyScript() {
-            const scriptText = document.getElementById('scriptContent').textContent;
-            navigator.clipboard.writeText(scriptText).then(() => {
-                const btn = event.target;
-                const originalText = btn.textContent;
-                btn.textContent = '✅ Gekopieerd!';
-                setTimeout(() => {
-                    btn.textContent = originalText;
-                }, 2000);
-            }).catch(err => {
-                alert('Kon niet kopiëren: ' + err);
-            });
+        function copyScript(e) {
+        const scriptText = document.getElementById('scriptContent').textContent;
+
+        navigator.clipboard.writeText(scriptText).then(() => {
+            const btn = e.target;
+            const originalText = btn.textContent;
+
+            btn.textContent = '✅ Gekopieerd!';
+            setTimeout(() => {
+            btn.textContent = originalText;
+            }, 2000);
+        }).catch(err => {
+            alert('Kon niet kopiëren: ' + err);
+        });
         }
         
         // Enter toets support
