@@ -31,7 +31,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || '');
 
 // Functie om Fast Cinema script te genereren
 async function generateFastCinemaScript(userTopic, userStyle) {
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
   // Stijl beschrijvingen
   const styleDescriptions = {
@@ -67,7 +67,7 @@ Elke rij moet deze kolommen bevatten:
 - Houd het extreem dynamisch, cinematisch en professioneel
 - Totale duur moet exact 30 seconden zijn
 
-Presenteer het als een duidelijk geformatteerde tabel.`;
+Presenteer het als een JSON object.`;
 
   try {
     const result = await model.generateContent(prompt);
@@ -164,5 +164,4 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`⏰ Gestart op: ${new Date().toISOString()}`);
   console.log('='.repeat(50));
-
 });
